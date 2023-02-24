@@ -11,6 +11,7 @@ import Browser
 import Html exposing (Html, button, div, text, li, ul, h1)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (shape)
+import Html.Attributes exposing (selected)
 
 
 
@@ -33,16 +34,12 @@ type alias Card =
   { shape : Shape
   , number : Number
   , color : Color
-  }
-
-type alias SelectableCard =
-  { card : Card
   , selected : Bool
   }
+
 type alias Model =
   { found : List Card
   , table : List Card
-  , selection : List Card
   , deck : List Card
   }
 
@@ -51,18 +48,12 @@ init : Model
 init =
   { found = []
   , table = [
-    { number = One
-    , color = Green
-    , shape = Triangle}
+    { number = One , color = Green , shape = Triangle , selected = False }
     ,
-    { number = Three
-    , color = Red
-    , shape = Circle}
+    { number = Three , color = Red , shape = Circle , selected = False }
   ]
-  , selection = []
   , deck = []
   }
-
 
 
 -- UPDATE
@@ -71,18 +62,18 @@ init =
 type Msg
   = Toggle Card
 
+toggleIfSame: Card -> Card -> Card
+toggleIfSame reference toToggle =
+  if { reference | selected = True } == { toToggle | selected = True } then
+    { toToggle | selected = not toToggle.selected }
+  else
+    toToggle
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
-    Toggle _ ->
-      model
-      {- 
-      if List.member card model.selected then
-        List.filter 
-      else
-        model.selection ++ [card]
-        -}
+    Toggle card ->
+      { model | table = List.map (toggleIfSame card) model.table }
 
 
 
@@ -103,8 +94,13 @@ numberToString number =
 
 viewCard : Card -> Html Msg
 viewCard card =
- let t = numberToString card.number ++ " " ++ shapeToString card.shape in
-   li [] [text t]
+ let t = numberToString card.number ++ " " ++ shapeToString card.shape 
+     tt = if card.selected then "[" ++ t ++ "]" else t
+  in
+   li [] 
+      [ button 
+          [onClick (Toggle card)]  
+          [text tt] ]
       
 
 viewTable : List Card -> Html Msg
