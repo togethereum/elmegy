@@ -34,13 +34,13 @@ type alias Card =
   { shape : Shape
   , number : Number
   , color : Color
-  , selected : Bool
   }
 
 type alias Model =
   { found : List Card
   , table : List Card
   , deck : List Card
+  , selection : List Card
   }
 
 
@@ -48,11 +48,12 @@ init : Model
 init =
   { found = []
   , table = [
-    { number = One , color = Green , shape = Triangle , selected = False }
+    { number = One , color = Green , shape = Triangle }
     ,
-    { number = Three , color = Red , shape = Circle , selected = False }
+    { number = Three , color = Red , shape = Circle }
   ]
   , deck = []
+  , selection = []
   }
 
 
@@ -62,18 +63,18 @@ init =
 type Msg
   = Toggle Card
 
-toggleIfSame: Card -> Card -> Card
-toggleIfSame reference toToggle =
-  if { reference | selected = True } == { toToggle | selected = True } then
-    { toToggle | selected = not toToggle.selected }
+toggleMember: a -> List a -> List a
+toggleMember m xs =
+  if List.member m xs then
+    List.filter (\x -> x /= m) xs
   else
-    toToggle
+    xs ++ [m]
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
     Toggle card ->
-      { model | table = List.map (toggleIfSame card) model.table }
+      { model | selection = toggleMember card model.selection }
 
 
 
@@ -92,10 +93,10 @@ numberToString number =
     Two -> "2"
     Three -> "3"
 
-viewCard : Card -> Html Msg
-viewCard card =
+viewCard : List Card -> Card -> Html Msg
+viewCard selectedCards card =
  let t = numberToString card.number ++ " " ++ shapeToString card.shape 
-     tt = if card.selected then "[" ++ t ++ "]" else t
+     tt = if List.member card selectedCards then "[" ++ t ++ "]" else t
   in
    li [] 
       [ button 
@@ -103,15 +104,15 @@ viewCard card =
           [text tt] ]
       
 
-viewTable : List Card -> Html Msg
-viewTable cards =
+viewTable : List Card -> List Card -> Html Msg
+viewTable cards selectedCards =
   ul []
-    (List.map viewCard cards)
+    (List.map (viewCard selectedCards) cards)
 
 view : Model -> Html Msg
 view model =
   div []
     [ 
       h1 [] [text "hei"],
-      viewTable model.table
+      viewTable model.table model.selection
     ]
