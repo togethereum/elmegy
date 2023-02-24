@@ -49,8 +49,9 @@ init =
   { found = []
   , table = [
     { number = One , color = Green , shape = Triangle }
-    ,
-    { number = Three , color = Red , shape = Circle }
+    , { number = Three , color = Red , shape = Circle }
+    , { number = Two , color = Blue , shape = Square }
+    , { number = One , color = Red , shape = Triangle }
   ]
   , deck = []
   , selection = []
@@ -70,11 +71,17 @@ toggleMember m xs =
   else
     xs ++ [m]
 
+maxSelectableCards : number
+maxSelectableCards = 3
+
 update : Msg -> Model -> Model
 update msg model =
   case msg of
     Toggle card ->
-      { model | selection = toggleMember card model.selection }
+      if List.length model.selection == maxSelectableCards && not (List.member card model.selection) then
+         model
+      else
+        { model | selection = toggleMember card model.selection }
 
 
 
