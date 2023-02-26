@@ -122,8 +122,8 @@ update msg model =
           if hasSet newSelection then
             { model |
               selection = [],
-              found = model.found ++ model.selection,
-              table = removeFromList model.selection model.table }
+              found = model.found ++ newSelection,
+              table = removeFromList newSelection model.table }
           else
             { model | selection = newSelection }
 
