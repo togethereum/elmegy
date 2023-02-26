@@ -14,7 +14,46 @@ import Html.Attributes exposing (shape)
 import Html.Attributes exposing (selected)
 import Array
 
+-- UTIL
+removeFromList : List a -> List a -> List a
+removeFromList toRemove list =
+  List.filter (\x -> not (List.member x toRemove))list
 
+allTheSame : (a, a, a) -> Bool
+allTheSame (x, y, z) =
+  x == y && y == z
+
+allDifferent : (a, a, a) -> Bool
+allDifferent (x, y, z) =
+  x /= y && y /= z && x /= y
+
+listToTuple3 : List a -> Maybe (a, a, a)
+listToTuple3 xs =
+    let arr = Array.fromList xs in
+    case Array.get 0 arr of
+      Nothing -> Nothing
+      Just x ->
+        case Array.get 1 arr of
+            Nothing -> Nothing
+            Just y ->
+              case Array.get 2 arr of
+                  Nothing -> Nothing
+                  Just z -> Just (x, y, z)
+
+headAndTail : List a -> Maybe (a, List a)
+headAndTail xs =
+  case List.head xs of
+    Nothing -> Nothing
+    Just h ->
+      case List.tail xs of
+        Nothing -> Nothing 
+        Just t -> Just (h, t)
+
+moveHeadToTail : List a -> List a -> (List a, List a)
+moveHeadToTail grow takeFrom =
+  case headAndTail takeFrom of
+      Nothing -> (grow, takeFrom)
+      Just (h, t) -> (grow ++[h], t)
 
 -- MAIN
 
@@ -57,34 +96,11 @@ init =
     , { number = Two , color = Blue , shape = Square }
     , { number = One , color = Red , shape = Triangle }
   ]
-  , deck = []
+  , deck = [
+    { number = Two , color = Green , shape = Square }
+  ]
   , selection = []
   }
-
-removeFromList : List a -> List a -> List a
-removeFromList toRemove list =
-  List.filter (\x -> not (List.member x toRemove))list
-
-allTheSame : (a, a, a) -> Bool
-allTheSame (x, y, z) =
-  x == y && y == z
-
-allDifferent : (a, a, a) -> Bool
-allDifferent (x, y, z) =
-  x /= y && y /= z && x /= y
-
-listToTuple3 : List a -> Maybe (a, a, a)
-listToTuple3 xs =
-    let arr = Array.fromList xs in
-    case Array.get 0 arr of
-      Nothing -> Nothing
-      Just x ->
-        case Array.get 1 arr of
-            Nothing -> Nothing
-            Just y ->
-              case Array.get 2 arr of
-                  Nothing -> Nothing
-                  Just z -> Just (x, y, z)
 
 isSet : List a -> Bool
 isSet xs =
@@ -100,9 +116,9 @@ hasSet cards =
 
 -- UPDATE
 
-
 type Msg
   = Toggle Card
+  | DrawCard
 
 toggleMember: a -> List a -> List a
 toggleMember m xs =
@@ -126,6 +142,11 @@ update msg model =
               table = removeFromList newSelection model.table }
           else
             { model | selection = newSelection }
+    DrawCard ->
+        let (newTable, newDeck) = moveHeadToTail model.table model.deck in
+            { model |
+              table = newTable,
+              deck = newDeck }
 
 -- VIEW
 shapeToString : Shape -> String
@@ -163,7 +184,8 @@ view model =
   div []
     [ 
       h1 [] [text "hei"],
+      button [onClick DrawCard] [text "Draw card"],
       viewTable model.table model.selection,
-      text ("found: " ++ (model.found |> List.length |> String.fromInt))
-
+      text ("Deck: " ++ (model.deck |> List.length |> String.fromInt)),
+      text ("Found: " ++ (model.found |> List.length |> String.fromInt))
     ]
